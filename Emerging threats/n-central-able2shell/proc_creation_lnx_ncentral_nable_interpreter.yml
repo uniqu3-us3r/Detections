@@ -1,0 +1,40 @@
+title: N-central nable Service Account Spawns Interpreter
+id: a7f0c3d2-91b6-4e58-8c14-2d6b9e0a7f33
+status: experimental
+description: >
+  Detects shell / interpreter / downloader execution under the nable service account
+  (uid 992 in disclosed PoC output) - the command-execution stage of the chain. Baseline
+  legitimate nable maintenance commands before enabling.
+author: Lars Ostmann
+date: 2026/11/10
+references:
+  - https://www.bleepingcomputer.com/news/security/n-able-takes-cloud-platform-offline-after-30-plus-zero-days-published/
+  - https://defusedcyber.com/
+  - https://github.com/Oracle-Security/CVEs/blob/main/0-Days/N-Central%20N-Able/
+logsource:
+  category: process_creation
+  product: linux
+detection:
+  selection_user:
+    - User: 'nable'
+    - Uid: 992
+  selection_image:
+    Image|endswith:
+      - '/sh'
+      - '/bash'
+      - '/dash'
+      - '/python'
+      - '/python3'
+      - '/perl'
+      - '/curl'
+      - '/wget'
+      - '/nc'
+      - '/ncat'
+  condition: selection_user and selection_image
+falsepositives:
+  - Authorized N-central maintenance run as nable (baseline and allowlist by command line)
+level: critical
+tags:
+  - attack.execution
+  - attack.t1059
+  - attack.t1059.004

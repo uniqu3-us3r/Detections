@@ -1,0 +1,36 @@
+title: N-central MMS Installation Log Submission With External Schema Reference
+id: 3b9a1f7e-2c84-4d16-9f0a-7e5b1c2d4a88
+status: experimental
+description: >
+  Detects ApplianceLogSubmit INSTALLATION_LOG submissions to the N-central MMS SOAP
+  endpoint whose (base64) payload decodes to a <service> element carrying an external
+  noNamespaceSchemaLocation. Benign appliance log submissions are extremely common, so
+  the anomaly is the external schema reference, not the method itself. Requires a WAF /
+  proxy that captures and (ideally) decodes request bodies.
+author: Lars Ostmann
+date: 2026/11/10
+references:
+  - https://www.huntress.com/blog/n-able-disables-cloud-services-following-disclosure-of-able2shell-exploit-chains
+  - https://defusedcyber.com/
+  - https://github.com/Oracle-Security/CVEs/blob/main/0-Days/N-Central%20N-Able/
+logsource:
+  category: waf
+detection:
+  selection_endpoint:
+    RequestUri|contains: '/dms2/services2/ServerMMS2'
+  selection_method:
+    RequestBody|contains|all:
+      - 'ApplianceLogSubmit'
+      - 'INSTALLATION_LOG'
+  selection_anomaly:
+    RequestBody|contains:
+      - 'noNamespaceSchemaLocation'
+      - 'SYSTEM'
+      - '<!ENTITY'
+  condition: selection_endpoint and selection_method and selection_anomaly
+falsepositives:
+  - Legitimate appliance log submissions will match the endpoint/method but not the external-schema anomaly
+level: medium
+tags:
+  - attack.initial_access
+  - attack.t1190

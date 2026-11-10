@@ -1,0 +1,27 @@
+title: N-central New Administrator At Role 1002 Outside Change Window
+id: f0c6d9b3-4a21-4e7c-9b85-3d7a1c6e2f90
+status: experimental
+description: >
+  Detects an N-central application audit event recording creation of a new user at the
+  administrator role (role id 1002). Correlate against your change-management window;
+  any admin-add not tied to an approved request is high priority. Map fields to your
+  N-central audit-log ingestion.
+author: Lars Ostmann
+date: 2026/11/10
+references:
+  - https://defusedcyber.com/
+  - https://github.com/Oracle-Security/CVEs/blob/main/0-Days/N-Central%20N-Able/
+logsource:
+  product: ncentral
+  service: audit
+detection:
+  selection:
+    EventType|contains: 'userAdd'
+    RoleId: 1002
+  condition: selection
+falsepositives:
+  - Approved administrator provisioning inside the change window
+level: high
+tags:
+  - attack.persistence
+  - attack.t1136
