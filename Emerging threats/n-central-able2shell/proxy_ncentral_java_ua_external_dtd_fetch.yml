@@ -1,0 +1,41 @@
+title: N-central Appliance Outbound XXE Callback Fetching External DTD/XML
+id: 2c7b5e94-8a1f-4d63-b0e2-9f4a1c6d3e78
+status: experimental
+description: >
+  Detects the N-central appliance making outbound HTTP requests carrying the DMS Java
+  user-agent (Java/21.0.13 observed) to fetch an external .dtd or .xml document. This is
+  the resolved-XXE signal common to the service-import, SIS repository, and custom-service
+  XXE sinks - the appliance should never fetch remote DTD/XML from arbitrary hosts. More
+  reliable than WAF body inspection, which the disclosed chains evade via gzip-compressed
+  SOAP bodies and legitimate endpoint URIs. Baseline legitimate vendor destinations first.
+author: Lars Ostmann
+date: 2026/11/10
+references:
+  - https://thecybersecguru.com/news/able2shell-n-central-zero-days-n-able-cloud-shutdown/
+  - https://defusedcyber.com/
+  - https://github.com/Oracle-Security/CVEs/blob/main/0-Days/N-Central%20N-Able/
+logsource:
+  category: proxy
+detection:
+  selection_agent:
+    cs-user-agent|startswith: 'Java/'
+  selection_fetch:
+    cs-uri-stem|endswith:
+      - '.dtd'
+      - '.xml'
+  filter_internal:
+    dst_ip|cidr:
+      - '10.0.0.0/8'
+      - '172.16.0.0/12'
+      - '192.168.0.0/16'
+  filter_vendor:
+    cs-host|contains: 'n-able.com'
+  condition: selection_agent and selection_fetch and not 1 of filter_*
+falsepositives:
+  - Legitimate appliance XML/DTD fetches from vendor or approved internal hosts (baseline and allowlist)
+level: high
+tags:
+  - attack.initial_access
+  - attack.exfiltration
+  - attack.t1190
+  - attack.t1048

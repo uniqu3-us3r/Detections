@@ -1,0 +1,34 @@
+title: N-central Unexpected JSP File Creation In Jetty Webroot
+id: 6d63d8a1-3c61-4e9e-a31e-9b2f4c7a1d05
+status: experimental
+description: >
+  Detects creation of a .jsp file anywhere under the N-central Jetty webroot
+  (/opt/nable/webapps/ROOT/). Multiple Able2Shell chains drop executable JSP web shells
+  here - the XXE chain stages into applianceLog/, while the SIS GenericFiles traversal,
+  File Repository traversal, and backup-restore Perl paths write JSPs elsewhere in the
+  tree (including tmp/). No legitimate N-central function writes a JSP into the webroot.
+  Files are often deleted immediately after execution, so alert on CREATE (and, where
+  sequence telemetry allows, create-then-delete in quick succession). Requires auditd /
+  Sysmon-for-Linux file monitoring on the appliance, not present by default.
+author: Lars Ostmann
+date: 2026/11/10
+references:
+  - https://thecybersecguru.com/news/able2shell-n-central-zero-days-n-able-cloud-shutdown/
+  - https://blog.ostorlab.co/n-able-n-central-rce-33-zero-days-able2shell.html
+  - https://defusedcyber.com/
+  - https://github.com/Oracle-Security/CVEs/blob/main/0-Days/N-Central%20N-Able/
+logsource:
+  category: file_event
+  product: linux
+detection:
+  selection:
+    TargetFilename|contains: '/opt/nable/webapps/ROOT/'
+    TargetFilename|endswith: '.jsp'
+  condition: selection
+falsepositives:
+  - None expected; legitimate N-central updates do not drop JSPs into the webroot
+level: critical
+tags:
+  - attack.persistence
+  - attack.execution
+  - attack.t1505.003
